@@ -1,5 +1,4 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { Pool } from 'pg';
 import * as schema from './schema';
 
@@ -14,8 +13,3 @@ const pool = new Pool({
 });
 
 export const db = drizzle(pool, { schema });
-
-// Automatically run migrations on startup
-migrate(db, { migrationsFolder: 'drizzle' })
-  .then(() => console.log('Database tables updated successfully!'))
-  .catch((err) => console.error('Failed to update database tables:', err));
