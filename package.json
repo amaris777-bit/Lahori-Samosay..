@@ -3,8 +3,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-"build": "next build",
-    "db:setup": "tsx src/db/seed.ts",
+"build": "npm run db:setup && next build",
+   "db:setup": "tsx src/db/seed.ts",
 "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
