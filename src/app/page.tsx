@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 async function buildDatabaseTables() {
   try {
-    // 1. Create Categories Table
+    // 1. Create Categories Table cleanly
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS categories (
         id SERIAL PRIMARY KEY,
@@ -20,7 +20,7 @@ async function buildDatabaseTables() {
       );
     `);
 
-    // 2. Create Products Table (images changed to a clean single TEXT field)
+    // 2. Create Products Table (Matching your schema's text-based image field)
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS products (
         id SERIAL PRIMARY KEY,
@@ -49,51 +49,44 @@ async function buildDatabaseTables() {
       );
     `);
 
-    // 4. Seed Category
-    const categoryCheck = await db.execute(sql`SELECT count(*) FROM categories;`);
-    const categoryCount = Number((categoryCheck[0] as any)?.count ?? 0);
-    
-    if (categoryCount === 0) {
-      await db.execute(sql`
-        INSERT INTO categories (name, slug, description, image)
-        VALUES (
-          'Samosas', 
-          'samosas', 
-          'Freshly baked and fried savory pastries.', 
-          'https://images.unsplash.com/photo-1601050690597-df056fb4ce78'
-        );
-      `);
+    // 4. Seed Category safely using standard Drizzle syntax
+    const categoryCheck = await db.select({ total: count() }).from(categories).catch(() => [{ total: 0 }]);
+    if (Number(categoryCheck[0]?.total ?? 0) === 0) {
+      await db.insert(categories).values({
+        name: "Samosas",
+        slug: "samosas",
+        description: "Freshly baked and fried savory pastries.",
+        image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78"
+      });
+      console.log("Initial category seeded!");
     }
 
-    // 5. Seed Product (Inserting images as a simple standard text string)
-    const productCheck = await db.execute(sql`SELECT count(*) FROM products;`);
-    const productCount = Number((productCheck[0] as any)?.count ?? 0);
-    
-    if (productCount === 0) {
-      await db.execute(sql`
-        INSERT INTO products (name, slug, description, price, images, badge, "spiceLevel", "isVegetarian", "servingSize", featured)
-        VALUES (
-          'Classic Potato Samosa',
-          'classic-potato-samosa',
-          'Crispy pastry filled with perfectly spiced potatoes and peas.',
-          5,
-          'https://images.unsplash.com/photo-1601050690597-df056fb4ce78',
-          'Best Seller',
-          2,
-          true,
-          '2 pieces',
-          true
-        );
-      `);
+    // 5. Seed Product safely using standard Drizzle syntax (passing a clean string)
+    const productCheck = await db.select({ total: count() }).from(products).catch(() => [{ total: 0 }]);
+    if (Number(productCheck[0]?.total ?? 0) === 0) {
+      await db.insert(products).values({
+        name: "Classic Potato Samosa",
+        slug: "classic-potato-samosa",
+        description: "Crispy pastry filled with perfectly spiced potatoes and peas.",
+        price: "5",
+        images: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78",
+        badge: "Best Seller",
+        spiceLevel: 2,
+        isVegetarian: true,
+        servingSize: "2 pieces",
+        featured: true,
+      });
+      console.log("Initial product seeded!");
     }
 
-    console.log("Database initialized cleanly!");
+    console.log("Database tables and seed data completely ready!");
   } catch (err) {
     console.error("Database initialization notice:", err);
   }
 }
 
 export default async function HomePage() {
+  // Ensure tables and starting content exist
   await buildDatabaseTables();
 
   // Fetch featured products with ratings
@@ -123,11 +116,12 @@ export default async function HomePage() {
   // Fetch categories
   const allCategories = await db.select().from(categories).orderBy(categories.name);
 
-  // Format fields cleanly. If template components expect an array for images, wrap the string.
+  // Format fields cleanly for the HomeClient component
   const formattedProducts = featuredProducts.map((p) => ({
     ...p,
     price: p.price.toString(),
     compareAtPrice: p.compareAtPrice?.toString() ?? null,
+    // Convert the database string value to an array format since the visual components loop over it
     images: Array.isArray(p.images) ? p.images : p.images ? [p.images] : [],
     avgRating: p.avgRating ? parseFloat(p.avgRating) : 0,
     reviewCount: Number(p.reviewCount),
