@@ -4,7 +4,8 @@
   "scripts": {
     "dev": "next dev",
 "build": "next build",
-    "start": "next start",
+    "db:setup": "tsx src/db/seed.ts",
+"start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
