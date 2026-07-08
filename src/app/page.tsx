@@ -20,7 +20,7 @@ async function buildDatabaseTables() {
       );
     `);
 
-    // 2. Create Products Table
+    // 2. Create Products Table (images changed to a clean single TEXT field)
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS products (
         id SERIAL PRIMARY KEY,
@@ -29,7 +29,7 @@ async function buildDatabaseTables() {
         description TEXT,
         price NUMERIC NOT NULL,
         "compareAtPrice" NUMERIC,
-        images TEXT[],
+        images TEXT,
         badge TEXT,
         "spiceLevel" INTEGER DEFAULT 0,
         "isVegetarian" BOOLEAN DEFAULT false,
@@ -49,7 +49,7 @@ async function buildDatabaseTables() {
       );
     `);
 
-    // 4. Seed an initial category using raw SQL to clear type errors
+    // 4. Seed Category
     const categoryCheck = await db.execute(sql`SELECT count(*) FROM categories;`);
     const categoryCount = Number((categoryCheck[0] as any)?.count ?? 0);
     
@@ -63,10 +63,9 @@ async function buildDatabaseTables() {
           'https://images.unsplash.com/photo-1601050690597-df056fb4ce78'
         );
       `);
-      console.log("Initial category added successfully!");
     }
 
-    // 5. Seed an initial product using raw SQL to avoid TEXT[] type mismatches
+    // 5. Seed Product (Inserting images as a simple standard text string)
     const productCheck = await db.execute(sql`SELECT count(*) FROM products;`);
     const productCount = Number((productCheck[0] as any)?.count ?? 0);
     
@@ -78,7 +77,7 @@ async function buildDatabaseTables() {
           'classic-potato-samosa',
           'Crispy pastry filled with perfectly spiced potatoes and peas.',
           5,
-          ARRAY['https://images.unsplash.com/photo-1601050690597-df056fb4ce78'],
+          'https://images.unsplash.com/photo-1601050690597-df056fb4ce78',
           'Best Seller',
           2,
           true,
@@ -86,10 +85,9 @@ async function buildDatabaseTables() {
           true
         );
       `);
-      console.log("Initial samosa added successfully!");
     }
 
-    console.log("Database tables and seed data completely ready!");
+    console.log("Database initialized cleanly!");
   } catch (err) {
     console.error("Database initialization notice:", err);
   }
@@ -125,10 +123,12 @@ export default async function HomePage() {
   // Fetch categories
   const allCategories = await db.select().from(categories).orderBy(categories.name);
 
+  // Format fields cleanly. If template components expect an array for images, wrap the string.
   const formattedProducts = featuredProducts.map((p) => ({
     ...p,
     price: p.price.toString(),
     compareAtPrice: p.compareAtPrice?.toString() ?? null,
+    images: Array.isArray(p.images) ? p.images : p.images ? [p.images] : [],
     avgRating: p.avgRating ? parseFloat(p.avgRating) : 0,
     reviewCount: Number(p.reviewCount),
   }));
