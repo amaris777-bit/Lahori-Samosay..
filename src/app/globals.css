@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-serif: 'Playfair Display', ui-serif, Georgia, serif;
+
+  --color-saffron-50: #fef9ee;
+  --color-saffron-100: #fdf0d3;
+  --color-saffron-200: #fbe0a5;
+  --color-saffron-300: #f8cb6d;
+  --color-saffron-400: #f5b033;
+  --color-saffron-500: #f29b16;
+  --color-saffron-600: #e3800b;
+  --color-saffron-700: #bc620b;
+  --color-saffron-800: #974d10;
+  --color-saffron-900: #7a4011;
+  --color-saffron-950: #422005;
+
+  --color-spice-50: #fdf3f3;
+  --color-spice-100: #fce4e4;
+  --color-spice-200: #fbcdcd;
+  --color-spice-300: #f6abab;
+  --color-spice-400: #ef7a7a;
+  --color-spice-500: #e34f4f;
+  --color-spice-600: #d03232;
+  --color-spice-700: #af2626;
+  --color-spice-800: #902323;
+  --color-spice-900: #782323;
+  --color-spice-950: #410e0e;
+
+  --color-curry-50: #f0fdf0;
+  --color-curry-100: #dcfcdd;
+  --color-curry-200: #bbf7bd;
+  --color-curry-300: #86ef8a;
+  --color-curry-400: #4ade52;
+  --color-curry-500: #22c52d;
+  --color-curry-600: #16a320;
+  --color-curry-700: #15801d;
+  --color-curry-800: #16651c;
+  --color-curry-900: #14531a;
+  --color-curry-950: #052e0a;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out forwards;
+}
+
+.animate-slide-out {
+  animation: slideOut 0.3s ease-in forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.4s ease-out forwards;
+}
+
+.animation-delay-100 { animation-delay: 100ms; }
+.animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-300 { animation-delay: 300ms; }
+.animation-delay-400 { animation-delay: 400ms; }
+.animation-delay-500 { animation-delay: 500ms; }
