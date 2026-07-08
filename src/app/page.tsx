@@ -7,7 +7,7 @@ import HomeClient from "./HomeClient";
 
 export const dynamic = "force-dynamic";
 
-// Temporary setup logic to ensure Neon has your tables built automatically
+// Temporary setup logic with exact case-sensitive column matching
 async function buildDatabaseTables() {
   try {
     // 1. Create Categories Table
@@ -21,7 +21,7 @@ async function buildDatabaseTables() {
       );
     `);
 
-    // 2. Create Products Table
+    // 2. Create Products Table (Using precise quotes for camelCase columns)
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS products (
         id SERIAL PRIMARY KEY,
@@ -29,12 +29,12 @@ async function buildDatabaseTables() {
         slug TEXT UNIQUE NOT NULL,
         description TEXT,
         price NUMERIC NOT NULL,
-        compare_at_price NUMERIC,
+        "compareAtPrice" NUMERIC,
         images TEXT[],
         badge TEXT,
-        spice_level INTEGER DEFAULT 0,
-        is_vegetarian BOOLEAN DEFAULT false,
-        serving_size TEXT,
+        "spiceLevel" INTEGER DEFAULT 0,
+        "isVegetarian" BOOLEAN DEFAULT false,
+        "servingSize" TEXT,
         featured BOOLEAN DEFAULT false
       );
     `);
@@ -43,14 +43,14 @@ async function buildDatabaseTables() {
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS reviews (
         id SERIAL PRIMARY KEY,
-        product_id INTEGER NOT NULL,
+        "productId" INTEGER NOT NULL,
         rating INTEGER NOT NULL,
         comment TEXT,
-        created_at TIMESTAMP DEFAULT NOW()
+        "createdAt" TIMESTAMP DEFAULT NOW()
       );
     `);
 
-    console.log("Database tables built successfully!");
+    console.log("Database tables built successfully with proper casing!");
   } catch (err) {
     console.error("Database initialization notice:", err);
   }
