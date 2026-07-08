@@ -3,6 +3,8 @@ import { db } from "@/db";
 import { products, reviews, categories } from "@/db/schema";
 import { eq, sql, avg, count, ilike, and, type SQL } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
   const category = searchParams.get("category");
