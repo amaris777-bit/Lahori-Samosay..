@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 async function buildDatabaseTables() {
   try {
-    // 1. Create Categories Table cleanly
+    // 1. Create Categories Table
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS categories (
         id SERIAL PRIMARY KEY,
@@ -20,7 +20,7 @@ async function buildDatabaseTables() {
       );
     `);
 
-    // 2. Create Products Table (Matching your schema's text-based image field)
+    // 2. Create Products Table
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS products (
         id SERIAL PRIMARY KEY,
@@ -49,7 +49,7 @@ async function buildDatabaseTables() {
       );
     `);
 
-    // 4. Seed Category safely using standard Drizzle syntax
+    // 4. Seed Category
     const categoryCheck = await db.select({ total: count() }).from(categories).catch(() => [{ total: 0 }]);
     if (Number(categoryCheck[0]?.total ?? 0) === 0) {
       await db.insert(categories).values({
@@ -57,11 +57,10 @@ async function buildDatabaseTables() {
         slug: "samosas",
         description: "Freshly baked and fried savory pastries.",
         image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78"
-      });
-      console.log("Initial category seeded!");
+      } as any);
     }
 
-    // 5. Seed Product safely using standard Drizzle syntax (passing a clean string)
+    // 5. Seed Product
     const productCheck = await db.select({ total: count() }).from(products).catch(() => [{ total: 0 }]);
     if (Number(productCheck[0]?.total ?? 0) === 0) {
       await db.insert(products).values({
@@ -75,18 +74,14 @@ async function buildDatabaseTables() {
         isVegetarian: true,
         servingSize: "2 pieces",
         featured: true,
-      });
-      console.log("Initial product seeded!");
+      } as any);
     }
-
-    console.log("Database tables and seed data completely ready!");
   } catch (err) {
     console.error("Database initialization notice:", err);
   }
 }
 
 export default async function HomePage() {
-  // Ensure tables and starting content exist
   await buildDatabaseTables();
 
   // Fetch featured products with ratings
@@ -116,16 +111,32 @@ export default async function HomePage() {
   // Fetch categories
   const allCategories = await db.select().from(categories).orderBy(categories.name);
 
-  // Format fields cleanly for the HomeClient component
-  const formattedProducts = featuredProducts.map((p) => ({
-    ...p,
-    price: p.price.toString(),
-    compareAtPrice: p.compareAtPrice?.toString() ?? null,
-    // Convert the database string value to an array format since the visual components loop over it
-    images: Array.isArray(p.images) ? p.images : p.images ? [p.images] : [],
-    avgRating: p.avgRating ? parseFloat(p.avgRating) : 0,
-    reviewCount: Number(p.reviewCount),
-  }));
+  // Format fields using dynamic structural bypass
+  const formattedProducts = featuredProducts.map((p: any) => {
+    let imagesArray: string[] = [];
+    if (p.images) {
+      if (Array.isArray(p.images)) {
+        imagesArray = p.images;
+      } else if (typeof p.images === 'string' && p.images.startsWith('[')) {
+        try {
+          imagesArray = JSON.parse(p.images);
+        } catch {
+          imagesArray = [p.images];
+        }
+      } else {
+        imagesArray = [p.images];
+      }
+    }
 
-  return <HomeClient products={formattedProducts} categories={allCategories} />;
+    return {
+      ...p,
+      price: p.price ? p.price.toString() : "0",
+      compareAtPrice: p.compareAtPrice ? p.compareAtPrice.toString() : null,
+      images: imagesArray,
+      avgRating: p.avgRating ? parseFloat(p.avgRating) : 0,
+      reviewCount: Number(p.reviewCount || 0),
+    };
+  });
+
+  return <HomeClient products={formattedProducts as any} categories={allCategories as any} />;
 }
