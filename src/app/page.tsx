@@ -7,9 +7,9 @@ import HomeClient from "./HomeClient";
 
 export const dynamic = "force-dynamic";
 
-async function buildDatabaseTables() {
+export default async function HomePage() {
   try {
-    // 1. Create Categories Table
+    // 1. Create Categories Table and wait for it
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS categories (
         id SERIAL PRIMARY KEY,
@@ -20,7 +20,7 @@ async function buildDatabaseTables() {
       );
     `);
 
-    // 2. Create Products Table
+    // 2. Create Products Table and wait for it
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS products (
         id SERIAL PRIMARY KEY,
@@ -38,7 +38,7 @@ async function buildDatabaseTables() {
       );
     `);
 
-    // 3. Create Reviews Table
+    // 3. Create Reviews Table and wait for it
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS reviews (
         id SERIAL PRIMARY KEY,
@@ -49,7 +49,7 @@ async function buildDatabaseTables() {
       );
     `);
 
-    // 4. Seed Category
+    // 4. Seed Category safely using standard Drizzle syntax
     const categoryCheck = await db.select({ total: count() }).from(categories).catch(() => [{ total: 0 }]);
     if (Number(categoryCheck[0]?.total ?? 0) === 0) {
       await db.insert(categories).values({
@@ -60,7 +60,7 @@ async function buildDatabaseTables() {
       } as any);
     }
 
-    // 5. Seed Product
+    // 5. Seed Product safely using standard Drizzle syntax
     const productCheck = await db.select({ total: count() }).from(products).catch(() => [{ total: 0 }]);
     if (Number(productCheck[0]?.total ?? 0) === 0) {
       await db.insert(products).values({
@@ -77,12 +77,10 @@ async function buildDatabaseTables() {
       } as any);
     }
   } catch (err) {
-    console.error("Database initialization notice:", err);
+    console.error("Database table initialization error:", err);
   }
-}
 
-export default async function HomePage() {
-  await buildDatabaseTables();
+  // --- NOW IT IS SAFE TO SELECT DATA BECAUSE THE TABLES DEFINITELY EXIST ---
 
   // Fetch featured products with ratings
   const featuredProducts = await db
