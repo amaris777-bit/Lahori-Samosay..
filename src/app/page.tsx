@@ -7,14 +7,8 @@ import HomeClient from "./HomeClient";
 
 export const dynamic = "force-dynamic";
 
-// Clear out mismatched table structures and re-initialize cleanly
 async function buildDatabaseTables() {
   try {
-    // Drop old structures first to clear case conflicts
-    await db.execute(sql`DROP TABLE IF EXISTS reviews;`);
-    await db.execute(sql`DROP TABLE IF EXISTS products;`);
-    await db.execute(sql`DROP TABLE IF EXISTS categories;`);
-
     // 1. Create Categories Table
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS categories (
@@ -26,7 +20,7 @@ async function buildDatabaseTables() {
       );
     `);
 
-    // 2. Create Products Table (With precise quotes for camelCase columns)
+    // 2. Create Products Table
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS products (
         id SERIAL PRIMARY KEY,
@@ -55,14 +49,31 @@ async function buildDatabaseTables() {
       );
     `);
 
-    console.log("Database tables rebuilt cleanly with exact case properties!");
+    // 4. Seed an initial product if the table is empty so the homepage doesn't crash
+    const productCheck = await db.select({ count: count() }).from(products);
+    if (Number(productCheck[0].count) === 0) {
+      await db.insert(products).values({
+        name: "Classic Potato Samosa",
+        slug: "classic-potato-samosa",
+        description: "Crispy pastry filled with perfectly spiced potatoes and peas.",
+        price: "5",
+        images: ["https://images.unsplash.com/photo-1601050690597-df056fb4ce78"],
+        badge: "Best Seller",
+        spiceLevel: 2,
+        isVegetarian: true,
+        servingSize: "2 pieces",
+        featured: true,
+      });
+      console.log("Initial samosa added to the database!");
+    }
+
+    console.log("Database tables built successfully with proper casing!");
   } catch (err) {
     console.error("Database initialization notice:", err);
   }
 }
 
 export default async function HomePage() {
-  // Clear and reconstruct tables with proper schemas
   await buildDatabaseTables();
 
   // Fetch featured products with ratings
