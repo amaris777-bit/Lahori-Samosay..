@@ -7,7 +7,59 @@ import HomeClient from "./HomeClient";
 
 export const dynamic = "force-dynamic";
 
+// Temporary setup logic to ensure Neon has your tables built automatically
+async function buildDatabaseTables() {
+  try {
+    // 1. Create Categories Table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS categories (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        slug TEXT UNIQUE NOT NULL,
+        description TEXT,
+        image TEXT
+      );
+    `);
+
+    // 2. Create Products Table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS products (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        slug TEXT UNIQUE NOT NULL,
+        description TEXT,
+        price NUMERIC NOT NULL,
+        compare_at_price NUMERIC,
+        images TEXT[],
+        badge TEXT,
+        spice_level INTEGER DEFAULT 0,
+        is_vegetarian BOOLEAN DEFAULT false,
+        serving_size TEXT,
+        featured BOOLEAN DEFAULT false
+      );
+    `);
+
+    // 3. Create Reviews Table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS reviews (
+        id SERIAL PRIMARY KEY,
+        product_id INTEGER NOT NULL,
+        rating INTEGER NOT NULL,
+        comment TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    console.log("Database tables built successfully!");
+  } catch (err) {
+    console.error("Database initialization notice:", err);
+  }
+}
+
 export default async function HomePage() {
+  // Trigger table setup on runtime execution
+  await buildDatabaseTables();
+
   // Fetch featured products with ratings
   const featuredProducts = await db
     .select({
