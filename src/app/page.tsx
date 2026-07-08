@@ -49,34 +49,44 @@ async function buildDatabaseTables() {
       );
     `);
 
-    // 4. Seed an initial category if empty
-    const categoryCheck = await db.select({ count: count() }).from(categories);
-    if (Number(categoryCheck[0].count) === 0) {
-      await db.insert(categories).values({
-        name: "Samosas",
-        slug: "samosas",
-        description: "Freshly baked and fried savory pastries.",
-        image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78"
-      });
-      console.log("Initial category added!");
+    // 4. Seed an initial category using raw SQL to clear type errors
+    const categoryCheck = await db.execute(sql`SELECT count(*) FROM categories;`);
+    const categoryCount = Number((categoryCheck[0] as any)?.count ?? 0);
+    
+    if (categoryCount === 0) {
+      await db.execute(sql`
+        INSERT INTO categories (name, slug, description, image)
+        VALUES (
+          'Samosas', 
+          'samosas', 
+          'Freshly baked and fried savory pastries.', 
+          'https://images.unsplash.com/photo-1601050690597-df056fb4ce78'
+        );
+      `);
+      console.log("Initial category added successfully!");
     }
 
-    // 5. Seed an initial product if empty
-    const productCheck = await db.select({ count: count() }).from(products);
-    if (Number(productCheck[0].count) === 0) {
-      await db.insert(products).values({
-        name: "Classic Potato Samosa",
-        slug: "classic-potato-samosa",
-        description: "Crispy pastry filled with perfectly spiced potatoes and peas.",
-        price: "5",
-        images: ["https://images.unsplash.com/photo-1601050690597-df056fb4ce78"],
-        badge: "Best Seller",
-        spiceLevel: 2,
-        isVegetarian: true,
-        servingSize: "2 pieces",
-        featured: true,
-      });
-      console.log("Initial samosa added!");
+    // 5. Seed an initial product using raw SQL to avoid TEXT[] type mismatches
+    const productCheck = await db.execute(sql`SELECT count(*) FROM products;`);
+    const productCount = Number((productCheck[0] as any)?.count ?? 0);
+    
+    if (productCount === 0) {
+      await db.execute(sql`
+        INSERT INTO products (name, slug, description, price, images, badge, "spiceLevel", "isVegetarian", "servingSize", featured)
+        VALUES (
+          'Classic Potato Samosa',
+          'classic-potato-samosa',
+          'Crispy pastry filled with perfectly spiced potatoes and peas.',
+          5,
+          ARRAY['https://images.unsplash.com/photo-1601050690597-df056fb4ce78'],
+          'Best Seller',
+          2,
+          true,
+          '2 pieces',
+          true
+        );
+      `);
+      console.log("Initial samosa added successfully!");
     }
 
     console.log("Database tables and seed data completely ready!");
