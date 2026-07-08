@@ -28,12 +28,13 @@ async function buildDatabaseTables() {
         slug TEXT UNIQUE NOT NULL,
         description TEXT,
         price NUMERIC NOT NULL,
-        "compareAtPrice" NUMERIC,
+        compare_at_price NUMERIC,
+        category_id INTEGER REFERENCES categories(id),
         images TEXT,
         badge TEXT,
-        "spiceLevel" INTEGER DEFAULT 0,
-        "isVegetarian" BOOLEAN DEFAULT false,
-        "servingSize" TEXT,
+        spice_level INTEGER DEFAULT 0,
+        is_vegetarian BOOLEAN DEFAULT false,
+        serving_size TEXT,
         featured BOOLEAN DEFAULT false
       );
     `);
@@ -42,16 +43,19 @@ async function buildDatabaseTables() {
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS reviews (
         id SERIAL PRIMARY KEY,
-        "productId" INTEGER NOT NULL,
+        product_id INTEGER NOT NULL REFERENCES products(id),
+        author TEXT NOT NULL DEFAULT 'Customer',
         rating INTEGER NOT NULL,
+        title TEXT,
         comment TEXT,
-        "createdAt" TIMESTAMP DEFAULT NOW()
+        verified BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT NOW()
       );
     `);
 
     // 4. Seed Category
-    const categoryCheck = await db.execute(sql`SELECT count(*) FROM categories;`);
-    const categoryCount = Number((categoryCheck[0] as any)?.count ?? 0);
+    const [categoryCheck] = await db.select({ count: count() }).from(categories);
+    const categoryCount = categoryCheck?.count ?? 0;
     
     if (categoryCount === 0) {
       await db.execute(sql`
@@ -66,18 +70,18 @@ async function buildDatabaseTables() {
     }
 
     // 5. Seed Product (Inserting images as a simple standard text string)
-    const productCheck = await db.execute(sql`SELECT count(*) FROM products;`);
-    const productCount = Number((productCheck[0] as any)?.count ?? 0);
+    const [productCheck] = await db.select({ count: count() }).from(products);
+    const productCount = productCheck?.count ?? 0;
     
     if (productCount === 0) {
       await db.execute(sql`
-        INSERT INTO products (name, slug, description, price, images, badge, "spiceLevel", "isVegetarian", "servingSize", featured)
+        INSERT INTO products (name, slug, description, price, images, badge, spice_level, is_vegetarian, serving_size, featured)
         VALUES (
           'Classic Potato Samosa',
           'classic-potato-samosa',
           'Crispy pastry filled with perfectly spiced potatoes and peas.',
           5,
-          'https://images.unsplash.com/photo-1601050690597-df056fb4ce78',
+          '["https://images.unsplash.com/photo-1601050690597-df056fb4ce78"]',
           'Best Seller',
           2,
           true,
@@ -128,7 +132,7 @@ export default async function HomePage() {
     ...p,
     price: p.price.toString(),
     compareAtPrice: p.compareAtPrice?.toString() ?? null,
-    images: Array.isArray(p.images) ? p.images : p.images ? [p.images] : [],
+    images: p.images,
     avgRating: p.avgRating ? parseFloat(p.avgRating) : 0,
     reviewCount: Number(p.reviewCount),
   }));
