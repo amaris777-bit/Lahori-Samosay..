@@ -49,7 +49,19 @@ async function buildDatabaseTables() {
       );
     `);
 
-    // 4. Seed an initial product if the table is empty so the homepage doesn't crash
+    // 4. Seed an initial category if empty
+    const categoryCheck = await db.select({ count: count() }).from(categories);
+    if (Number(categoryCheck[0].count) === 0) {
+      await db.insert(categories).values({
+        name: "Samosas",
+        slug: "samosas",
+        description: "Freshly baked and fried savory pastries.",
+        image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78"
+      });
+      console.log("Initial category added!");
+    }
+
+    // 5. Seed an initial product if empty
     const productCheck = await db.select({ count: count() }).from(products);
     if (Number(productCheck[0].count) === 0) {
       await db.insert(products).values({
@@ -64,10 +76,10 @@ async function buildDatabaseTables() {
         servingSize: "2 pieces",
         featured: true,
       });
-      console.log("Initial samosa added to the database!");
+      console.log("Initial samosa added!");
     }
 
-    console.log("Database tables built successfully with proper casing!");
+    console.log("Database tables and seed data completely ready!");
   } catch (err) {
     console.error("Database initialization notice:", err);
   }
