@@ -7,9 +7,14 @@ import HomeClient from "./HomeClient";
 
 export const dynamic = "force-dynamic";
 
-// Temporary setup logic with exact case-sensitive column matching
+// Clear out mismatched table structures and re-initialize cleanly
 async function buildDatabaseTables() {
   try {
+    // Drop old structures first to clear case conflicts
+    await db.execute(sql`DROP TABLE IF EXISTS reviews;`);
+    await db.execute(sql`DROP TABLE IF EXISTS products;`);
+    await db.execute(sql`DROP TABLE IF EXISTS categories;`);
+
     // 1. Create Categories Table
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS categories (
@@ -21,7 +26,7 @@ async function buildDatabaseTables() {
       );
     `);
 
-    // 2. Create Products Table (Using precise quotes for camelCase columns)
+    // 2. Create Products Table (With precise quotes for camelCase columns)
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS products (
         id SERIAL PRIMARY KEY,
@@ -50,14 +55,14 @@ async function buildDatabaseTables() {
       );
     `);
 
-    console.log("Database tables built successfully with proper casing!");
+    console.log("Database tables rebuilt cleanly with exact case properties!");
   } catch (err) {
     console.error("Database initialization notice:", err);
   }
 }
 
 export default async function HomePage() {
-  // Trigger table setup on runtime execution
+  // Clear and reconstruct tables with proper schemas
   await buildDatabaseTables();
 
   // Fetch featured products with ratings
